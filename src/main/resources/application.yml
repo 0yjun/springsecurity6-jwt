@@ -8,7 +8,7 @@ springdoc:
 
 spring:
   profiles:
-    active: mysql
+    active: mysql-mac
   jpa:
     hibernate:
       ddl-auto: create-drop

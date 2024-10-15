@@ -23,6 +23,8 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserCredential userCredential;
 
+    //private String password = this.userCredential.getPassword();
+
     public void setUserCredential(UserCredential userCredential){
         this.userCredential =userCredential;
     }

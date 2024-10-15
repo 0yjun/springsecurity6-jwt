@@ -1,6 +1,8 @@
 package com.security.domain.auth.controller;
 
+import com.security.domain.auth.model.reqest.LoginRequest;
 import com.security.domain.auth.model.reqest.SignupRequest;
+import com.security.domain.auth.model.response.LoginResponse;
 import com.security.domain.auth.model.response.SignupResponse;
 import com.security.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,5 +29,17 @@ public class UserController {
     ){
         log.info("requestis "+request.toString());
         return authService.register(request);
+    }
+
+    @Operation(
+            summary = "LOGIN",
+            description = "로그인"
+    )
+    @PostMapping("/login")
+    public LoginResponse login(
+            @RequestBody LoginRequest request
+    ){
+        log.info("requestis is "+request.getPassword());
+        return authService.login(request);
     }
 }

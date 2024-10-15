@@ -10,6 +10,9 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User,Long> {
     Optional<User> findByName(String name);
+
+    @Query("SELECT u FROM User u join u.userCredential uc WHERE u.name != :user")
+    Optional<User> findWithUserCredentialByName(@Param("user") String user);
     boolean existsByName(String name);
 
     @Query("SELECT u.name FROM User AS u WHERE LOCATE(LOWER(:pattern), LOWER(u.name)) > 0 AND u.name != :user")

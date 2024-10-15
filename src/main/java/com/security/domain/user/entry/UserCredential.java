@@ -52,12 +52,12 @@ public class UserCredential implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return accountLocked;
+        return !this.accountLocked;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class UserCredential implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.user.isEnabled();
+        return true;
     }
 
     public void increaseFailedLoginAttempts(){
