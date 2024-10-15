@@ -3,7 +3,7 @@ package com.security.domain.user.service;
 
 import com.security.domain.user.model.response.UserResponse;
 import com.security.domain.user.repository.UserRepository;
-import com.security.domain.user.repository.entry.User;
+import com.security.domain.user.entry.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
