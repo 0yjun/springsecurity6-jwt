@@ -37,6 +37,9 @@ public class UserCredential implements UserDetails {
         return null;
     }
 
+    public UserCredential(User user) {
+        this.user = user;
+    }
     @Override
     public String getPassword() {
         return password;
