@@ -1,0 +1,37 @@
+server:
+  port: 8081
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    operations-sorter: method
+
+spring:
+  profiles:
+    active: mysql
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        #show_sql: true
+        format_sql: true
+        use_sql_comments: true
+  security:
+    oauth2:
+      authorizationserver:
+        endpoint:
+          token-introspection-uri:
+logging.level:
+  org.hibernate.SQL: debug
+  org.hibernate.type: trace
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+token:
+  secret-key: "SECRET"
+  refresh-secret-key: "REFRESH_SECRET"
+  token-time: 300
+  refresh-token-time: 300
