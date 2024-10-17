@@ -1,6 +1,8 @@
 package com.security.domain.auth.service;
 
 
+import com.security.common.exception.CustomException;
+import com.security.common.exception.ErrorCode;
 import com.security.domain.auth.model.reqest.LoginRequest;
 import com.security.domain.auth.model.reqest.SignupRequest;
 import com.security.domain.auth.model.response.LoginResponse;
@@ -53,7 +55,7 @@ public class AuthService implements UserDetailsService {
         log.error("user register");
         Optional<User> findUser = userRepository.findByName(request.getName());
         if(findUser.isPresent()){
-            throw new DuplicateKeyException("아이디가 중복되었습니다.");
+            throw new CustomException(ErrorCode.USER_ALREADY_EXIST);
         }
         try{
             User newUser = this.newUser(request.getName());
@@ -62,10 +64,7 @@ public class AuthService implements UserDetailsService {
             User savedUser = userRepository.save(newUser);
             log.error("user save");
         }catch(Exception e){
-            //TODO 반환
-            log.error("user save error");
-            e.printStackTrace();
-            return null;
+            throw new CustomException(ErrorCode.USER_SAVE_FAIL);
         }
         return new SignupResponse(request.getName());
     }
@@ -75,7 +74,7 @@ public class AuthService implements UserDetailsService {
         // 사용자 이름을 통해 사용자 정보를 로드
         Optional<User> user = userRepository.findByName(username);
         if (user.isEmpty()) {
-            throw new UsernameNotFoundException("User not found with name: " + username);
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
         return UserCredential.builder()
                 .user(user.get())
@@ -122,17 +121,13 @@ public class AuthService implements UserDetailsService {
             if (auth.isAuthenticated()) {
                 // TODO: 토큰 생성 등의 추가 로직
                 log.error("토큰 발급 성공");
-                return new LoginResponse(request.getName());
+                return new LoginResponse(ErrorCode.SUCCESS, "");
             } else {
-                log.error("토큰 발급 실패"+authentication.getCredentials().toString());
-                // TODO: 인증 실패 처리
-                return null;
+                throw new CustomException(ErrorCode.TOKEN_IS_INVALID);
             }
         }catch (Exception e){
             //TODO Exception 구현
-            log.error("로그인 실패 ",e.getMessage());
-            e.printStackTrace();
-            return null;
+            throw new CustomException(ErrorCode.LOGIN_FAIL);
         }
     }
 
