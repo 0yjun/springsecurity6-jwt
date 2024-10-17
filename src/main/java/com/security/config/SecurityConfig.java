@@ -1,6 +1,8 @@
 package com.security.config;
 
 import com.security.domain.auth.service.AuthService;
+import com.security.security.JWTFilter;
+import com.security.security.JWTProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +24,11 @@ import java.util.regex.Pattern;
 @Configuration
 public class SecurityConfig {
     private final AuthService authService;
+    private final JWTProvider jwtProvider;
 
-    public SecurityConfig(@Lazy  AuthService authService) {
+    public SecurityConfig(@Lazy  AuthService authService, JWTProvider jwtProvider) {
         this.authService = authService;
+        this.jwtProvider = jwtProvider;
     }
 
     @Bean
@@ -56,10 +60,11 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/signup", "/api/user/login").permitAll() // signup과 login 요청은 인증 불필요
+                        .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // signup과 login 요청은 인증 불필요
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 )
-                .logout(LogoutConfigurer::permitAll); // 로그아웃은 모두 허용
+                .logout(LogoutConfigurer::permitAll) // 로그아웃은 모두 허용
+                .addFilterBefore(new JWTFilter(jwtProvider),LoginFilter.class);
         return http.build();
     }
 }

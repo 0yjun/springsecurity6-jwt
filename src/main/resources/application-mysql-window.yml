@@ -29,8 +29,3 @@ decorator:
   datasource:
     p6spy:
       enable-logging: true
-token:
-  secret-key: "SECRET"
-  refresh-secret-key: "REFRESH_SECRET"
-  token-time: 300
-  refresh-token-time: 300

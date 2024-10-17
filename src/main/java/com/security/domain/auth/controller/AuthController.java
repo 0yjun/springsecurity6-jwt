@@ -1,5 +1,6 @@
 package com.security.domain.auth.controller;
 
+import com.security.common.exception.CustomException;
 import com.security.domain.auth.model.reqest.LoginRequest;
 import com.security.domain.auth.model.reqest.SignupRequest;
 import com.security.domain.auth.model.response.LoginResponse;
@@ -13,10 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name="user API", description = "user API")
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/auth")
 @Slf4j
 @RequiredArgsConstructor
-public class UserController {
+public class AuthController {
     private final AuthService authService;
 
     @Operation(
@@ -27,7 +28,6 @@ public class UserController {
     public SignupResponse register(
             @RequestBody SignupRequest request
     ){
-        log.info("requestis "+request.toString());
         return authService.register(request);
     }
 
@@ -39,7 +39,17 @@ public class UserController {
     public LoginResponse login(
             @RequestBody LoginRequest request
     ){
-        log.info("requestis is "+request.getPassword());
         return authService.login(request);
+    }
+
+    @Operation(
+            summary = "DECODE TOKKEN",
+            description = "JWT 토큰 복호화"
+    )
+    @GetMapping("/getuser-from-token/{token}")
+    public String getUserFromToken(
+            @PathVariable String token
+    ){
+        return authService.getUserFromToken(token);
     }
 }

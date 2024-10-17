@@ -10,6 +10,7 @@ import com.security.domain.auth.model.response.SignupResponse;
 import com.security.domain.user.entry.User;
 import com.security.domain.user.entry.UserCredential;
 import com.security.domain.user.repository.UserRepository;
+import com.security.security.JWTProvider;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,19 +70,6 @@ public class AuthService implements UserDetailsService {
         return new SignupResponse(request.getName());
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 사용자 이름을 통해 사용자 정보를 로드
-        Optional<User> user = userRepository.findByName(username);
-        if (user.isEmpty()) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
-        return UserCredential.builder()
-                .user(user.get())
-                .password(user.get().getUserCredential().getPassword())
-                .build();
-    }
-
     public User newUser(String name){
         return User.builder()
                 .name(name)
@@ -107,29 +95,53 @@ public class AuthService implements UserDetailsService {
      * **************************************************************************************************************/
 
     public LoginResponse login(LoginRequest request){
+        /* 아이디 비밀번호 체크 */
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getName(),request.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-
-//            Authentication authentication = new UsernamePasswordAuthenticationToken(request.getName(),request.getPassword());
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-            // 사용자 인증 정보를 가져온 후 처리
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth.isAuthenticated()) {
-                // TODO: 토큰 생성 등의 추가 로직
-                log.error("토큰 발급 성공");
-                return new LoginResponse(ErrorCode.SUCCESS, "");
-            } else {
-                throw new CustomException(ErrorCode.TOKEN_IS_INVALID);
-            }
         }catch (Exception e){
-            //TODO Exception 구현
-            throw new CustomException(ErrorCode.LOGIN_FAIL);
+            e.printStackTrace();
+            throw new CustomException(ErrorCode.MIS_MATCH_PASSWORD, e.getMessage());
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        /* 토큰 생성 */
+        if (auth.isAuthenticated()) {
+            // TODO: 토큰 생성 등의 추가 로직
+            log.error("토큰 발급 성공");
+            try{
+                String token = JWTProvider.createToken(request.getName());
+                return new LoginResponse(ErrorCode.SUCCESS, token);
+            }catch(IllegalArgumentException e){
+                e.printStackTrace();
+                throw new CustomException(ErrorCode.ACCESS_TOKEN_IS_NOT_CREATED);
+            }
+        } else {
+            throw new CustomException(ErrorCode.TOKEN_IS_INVALID);
         }
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // 사용자 이름을 통해 사용자 정보를 로드
+        Optional<User> user = userRepository.findByName(username);
+        if (user.isEmpty()) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        return UserCredential.builder()
+                .user(user.get())
+                .password(user.get().getUserCredential().getPassword())
+                .build();
+    }
+
+    /* **************************************************************************************************************
+     * * 로그인 END
+     * **************************************************************************************************************/
+
+    public String getUserFromToken(String token){
+        return JWTProvider.getUserFromToken(token);
+    }
 
 }

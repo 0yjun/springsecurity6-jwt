@@ -16,6 +16,8 @@ public enum ErrorCode {
     TOKEN_IS_INVALID(HttpStatus.BAD_REQUEST, "ACCOUNT-006","유효하지 않은 토큰입니다."),
     ACCESS_TOKEN_IS_NOT_EXPIRED(HttpStatus.UNAUTHORIZED, "ACCOUNT-007","토큰이 만료되지 않았습니다."),
     ACCESS_TOKEN_IS_EXPIRED(HttpStatus.UNAUTHORIZED, "ACCOUNT-008","토큰이 만료되었습니다."),
+    ACCESS_TOKEN_IS_NOT_CREATED(HttpStatus.UNAUTHORIZED, "ACCOUNT-008","토큰이 생성에 실패하였습니다."),
+    ACCESS_TOKEN_IS_NOT_EXIST(HttpStatus.UNAUTHORIZED, "ACCOUNT-008","토큰이 졵재하지 않습니다."),
     LOGIN_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "ACCOUNT-009", "로그인에 실패하였습니다."),
 
     /* 성공처리 */
