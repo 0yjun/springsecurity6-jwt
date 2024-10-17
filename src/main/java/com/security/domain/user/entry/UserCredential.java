@@ -3,9 +3,11 @@ package com.security.domain.user.entry;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 
 @Getter
 @Builder
@@ -13,7 +15,7 @@ import java.util.Collection;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name="user_credential")
-public class UserCredential implements UserDetails {
+public class UserCredential implements UserDetails{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,18 +33,21 @@ public class UserCredential implements UserDetails {
     @Column(nullable = false)
     private boolean accountLocked = false; // 계정 잠금 여부
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        //TODO 구현
-        return null;
-    }
-
     public UserCredential(User user) {
         this.user = user;
     }
+
+    /******************************************************************************************************************
+     * UserDetails 구현
+     ******************************************************************************************************************/
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
     @Override
     public String getPassword() {
-        return password;
+        return this.password;  // 비밀번호 반환
     }
 
     @Override
@@ -57,7 +62,7 @@ public class UserCredential implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !this.accountLocked;
+        return true;
     }
 
     @Override
@@ -70,13 +75,4 @@ public class UserCredential implements UserDetails {
         return true;
     }
 
-    public void increaseFailedLoginAttempts(){
-        this.failedLoginAttempts++;
-        if(this.failedLoginAttempts >=5) this.accountLocked = true;
-    }
-
-    public void unlockAccount(){
-        this.failedLoginAttempts = 0;
-        this.accountLocked = false;
-    }
 }

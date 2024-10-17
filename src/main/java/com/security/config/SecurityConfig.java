@@ -1,25 +1,31 @@
 package com.security.config;
 
 import com.security.domain.auth.service.AuthService;
-import org.apache.catalina.filters.HttpHeaderSecurityFilter;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.regex.Pattern;
+
+@Slf4j
 @Configuration
 public class SecurityConfig {
+    private final AuthService authService;
+
+    public SecurityConfig(@Lazy  AuthService authService) {
+        this.authService = authService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -27,16 +33,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authManager(
-            HttpSecurity http
-            , UserDetailsService userDetailsService
-            , PasswordEncoder passwordEncoder
-    ) throws Exception {
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+        authenticationManagerBuilder
+                .userDetailsService(authService)
+                .passwordEncoder(this.passwordEncoder());
         return authenticationManagerBuilder.build();
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(

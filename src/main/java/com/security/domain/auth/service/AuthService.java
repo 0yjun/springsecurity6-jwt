@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -50,7 +51,10 @@ public class AuthService implements UserDetailsService {
 
     public SignupResponse register(SignupRequest request){
         log.error("user register");
-        //UserDetails userDetails = this.loadUserByUsername(request.getName());
+        Optional<User> findUser = userRepository.findByName(request.getName());
+        if(findUser.isPresent()){
+            throw new DuplicateKeyException("아이디가 중복되었습니다.");
+        }
         try{
             User newUser = this.newUser(request.getName());
             UserCredential userCredential = this.newUsercrUserCredential(request.getPassword(),newUser);
@@ -73,8 +77,10 @@ public class AuthService implements UserDetailsService {
         if (user.isEmpty()) {
             throw new UsernameNotFoundException("User not found with name: " + username);
         }
-        log.error("Stored password: " + user.get().getUserCredential().getPassword()); // 데이터베이스에 저장된 비밀번호
-        return new UserCredential(user.get());
+        return UserCredential.builder()
+                .user(user.get())
+                .password(user.get().getUserCredential().getPassword())
+                .build();
     }
 
     public User newUser(String name){
@@ -103,17 +109,14 @@ public class AuthService implements UserDetailsService {
 
     public LoginResponse login(LoginRequest request){
         try {
-            log.error("requset name "+request.getName());
-            log.error("requset password "+request.getPassword());
-            log.error("encoded password "+passwordEncoder.encode(request.getPassword()));
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getName(),request.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
 
-            //Authentication authentication = new UsernamePasswordAuthenticationToken(request.getName(),request.getPassword());
-            //SecurityContextHolder.getContext().setAuthentication(authentication);
+//            Authentication authentication = new UsernamePasswordAuthenticationToken(request.getName(),request.getPassword());
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
             // 사용자 인증 정보를 가져온 후 처리
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth.isAuthenticated()) {
@@ -121,7 +124,7 @@ public class AuthService implements UserDetailsService {
                 log.error("토큰 발급 성공");
                 return new LoginResponse(request.getName());
             } else {
-                log.error("토큰 발급 실패");
+                log.error("토큰 발급 실패"+authentication.getCredentials().toString());
                 // TODO: 인증 실패 처리
                 return null;
             }
