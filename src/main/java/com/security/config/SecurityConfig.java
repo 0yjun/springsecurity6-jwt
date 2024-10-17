@@ -1,8 +1,8 @@
 package com.security.config;
 
 import com.security.domain.auth.service.AuthService;
-import com.security.security.JWTFilter;
-import com.security.security.JWTProvider;
+import com.security.security.JWTUtil;
+import com.security.security.JwtRequestFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,22 +13,27 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import java.util.regex.Pattern;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Slf4j
 @Configuration
 public class SecurityConfig {
     private final AuthService authService;
-    private final JWTProvider jwtProvider;
+    private final JwtRequestFilter jwtRequestFilter;
+    private final AuthenticationConfiguration authenticationConfiguration;
 
-    public SecurityConfig(@Lazy  AuthService authService, JWTProvider jwtProvider) {
+    public SecurityConfig(
+            @Lazy  AuthService authService
+            , @Lazy JwtRequestFilter  jwtRequestFilter
+            , AuthenticationConfiguration authenticationConfiguration
+    ) {
         this.authService = authService;
-        this.jwtProvider = jwtProvider;
+        this.jwtRequestFilter = jwtRequestFilter;
+        this.authenticationConfiguration = authenticationConfiguration;
     }
 
     @Bean
@@ -56,15 +61,17 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // signup과 login 요청은 인증 불필요
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
+        http.csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 상태 비저장
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll() // 로그인 및 회원가입 허용
+                        .anyRequest().authenticated() // 나머지 요청은 인증 필요
                 )
-                .logout(LogoutConfigurer::permitAll) // 로그아웃은 모두 허용
-                .addFilterBefore(new JWTFilter(jwtProvider),LoginFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
+
         return http.build();
     }
 }

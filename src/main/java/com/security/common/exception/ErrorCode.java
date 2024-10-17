@@ -19,6 +19,7 @@ public enum ErrorCode {
     ACCESS_TOKEN_IS_NOT_CREATED(HttpStatus.UNAUTHORIZED, "ACCOUNT-008","토큰이 생성에 실패하였습니다."),
     ACCESS_TOKEN_IS_NOT_EXIST(HttpStatus.UNAUTHORIZED, "ACCOUNT-008","토큰이 졵재하지 않습니다."),
     LOGIN_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "ACCOUNT-009", "로그인에 실패하였습니다."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "ACCOUNT-009", "서버 내부 오류가 발생했습니다."),
 
     /* 성공처리 */
     SUCCESS(HttpStatus.OK, "success-001", ""),

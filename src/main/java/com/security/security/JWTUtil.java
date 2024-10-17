@@ -10,10 +10,9 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.security.common.constants.Constants;
 import com.security.common.exception.CustomException;
 import com.security.common.exception.ErrorCode;
-import io.netty.util.internal.StringUtil;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -21,7 +20,7 @@ import java.util.Date;
 
 @Slf4j
 @Component
-public class JWTProvider {
+public class JWTUtil {
     private static String secretKey;
     private static String refreshSecretKey;
     private static long tokenTimeForMinute;
@@ -29,22 +28,22 @@ public class JWTProvider {
 
     @Value("${token.secret-key}")
     public void setSecretKey(String secretKey) {
-        JWTProvider.secretKey = secretKey;
+        JWTUtil.secretKey = secretKey;
     }
 
     @Value("${token.refresh-secret-key}")
     public void setRefreshSecretKey(String refreshSecretKey) {
-        JWTProvider.refreshSecretKey = refreshSecretKey;
+        JWTUtil.refreshSecretKey = refreshSecretKey;
     }
 
     @Value("${token.token-time}")
     public void setTokenTime(long tokenTime) {
-        JWTProvider.tokenTimeForMinute = tokenTime;
+        JWTUtil.tokenTimeForMinute = tokenTime;
     }
 
     @Value("${token.refresh-token-time}")
     public void setRefreshTokenTime(long refreshTokenTime) {
-        JWTProvider.tokenTimeForMinute = refreshTokenTime;
+        JWTUtil.tokenTimeForMinute = refreshTokenTime;
     }
 
 
@@ -91,6 +90,12 @@ public class JWTProvider {
     public static String getUserFromToken(String token){
         DecodedJWT jwt = decodedJWT(token);
         return jwt.getSubject();
+    }
+
+
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = getUserFromToken(token);
+        return username.equals(userDetails.getUsername());
     }
 
 }

@@ -10,23 +10,19 @@ import com.security.domain.auth.model.response.SignupResponse;
 import com.security.domain.user.entry.User;
 import com.security.domain.user.entry.UserCredential;
 import com.security.domain.user.repository.UserRepository;
-import com.security.security.JWTProvider;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import com.security.security.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Optional;
 
@@ -37,15 +33,18 @@ public class AuthService implements UserDetailsService {
     private final UserRepository userRepository;
     private AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final JWTUtil jwtUtil;
 
     public AuthService(
             UserRepository userRepository
             ,@Lazy AuthenticationManager authenticationManager
             , PasswordEncoder passwordEncoder
+            , JWTUtil jwtUtil
     ) {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     /* **************************************************************************************************************
@@ -95,31 +94,15 @@ public class AuthService implements UserDetailsService {
      * **************************************************************************************************************/
 
     public LoginResponse login(LoginRequest request){
-        /* 아이디 비밀번호 체크 */
-        try {
+        try{
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getName(),request.getPassword())
             );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        }catch (Exception e){
-            e.printStackTrace();
-            throw new CustomException(ErrorCode.MIS_MATCH_PASSWORD, e.getMessage());
-        }
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        /* 토큰 생성 */
-        if (auth.isAuthenticated()) {
-            // TODO: 토큰 생성 등의 추가 로직
-            log.error("토큰 발급 성공");
-            try{
-                String token = JWTProvider.createToken(request.getName());
-                return new LoginResponse(ErrorCode.SUCCESS, token);
-            }catch(IllegalArgumentException e){
-                e.printStackTrace();
-                throw new CustomException(ErrorCode.ACCESS_TOKEN_IS_NOT_CREATED);
-            }
-        } else {
-            throw new CustomException(ErrorCode.TOKEN_IS_INVALID);
+            final UserDetails userDetails = loadUserByUsername(request.getName());
+            final String jwt = jwtUtil.createToken(request.getName());
+            return new LoginResponse(ErrorCode.SUCCESS_LOGIN, jwt);
+        }catch(AuthenticationException e){
+            throw new CustomException(ErrorCode.MIS_MATCH_PASSWORD,e.getMessage());
         }
     }
 
@@ -141,7 +124,7 @@ public class AuthService implements UserDetailsService {
      * **************************************************************************************************************/
 
     public String getUserFromToken(String token){
-        return JWTProvider.getUserFromToken(token);
+        return JWTUtil.getUserFromToken(token);
     }
 
 }
